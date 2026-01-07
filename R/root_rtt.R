@@ -11,6 +11,7 @@
 #' two numeric vectors x then y, and returns a numeric value. This function will
 #' be used to calculate the objective value for a given root. See Details for
 #' more information.
+#' @param force logical; force rerooting even if tree is rooted?
 #' @param opt.tol tolerance for optimization precision.
 #' @return The function returns a list of rooted phylogenetic trees.
 #' @details There are two ways to define an objective. The simplest approach is
@@ -44,7 +45,15 @@ root_rtt <-function (
     ncpu = 1,
     objective = NULL,
     objective_fn = NULL,
+    force = FALSE,
     opt.tol = .Machine$double.eps^0.25) {
+    if (ape::is.rooted(t)) {
+      if (force) {
+        t <- ape::unroot(t)
+      } else {
+        stop("Tree is already rooted.")
+      }
+    }
     topx <- max(1, topx)
     if (!is.null(objective)) {
       if (is.null(objective_fn)) {
