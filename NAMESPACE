@@ -2,6 +2,7 @@
 
 export(date_lower)
 export(date_middle)
+export(date_runif)
 export(date_upper)
 export(root_rtt)
 importFrom(ape,dist.nodes)
