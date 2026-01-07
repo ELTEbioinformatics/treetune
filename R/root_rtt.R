@@ -54,6 +54,8 @@ root_rtt <-function (
         stop("Tree is already rooted.")
       }
     }
+    # convert tip dates to numeric
+    tip.dates <- as.numeric(as.Date(tip.dates, origin = "1970-01-01"))
     topx <- max(1, topx)
     if (!is.null(objective)) {
       if (is.null(objective_fn)) {
