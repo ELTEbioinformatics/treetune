@@ -11,6 +11,7 @@ root_rtt(
   ncpu = 1,
   objective = NULL,
   objective_fn = NULL,
+  force = FALSE,
   opt.tol = .Machine$double.eps^0.25
 )
 }
@@ -29,6 +30,8 @@ best root. See Details for more information.}
 two numeric vectors x then y, and returns a numeric value. This function will
 be used to calculate the objective value for a given root. See Details for
 more information.}
+
+\item{force}{logical; force rerooting even if tree is rooted?}
 
 \item{opt.tol}{tolerance for optimization precision.}
 }
