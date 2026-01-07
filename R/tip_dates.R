@@ -43,7 +43,7 @@ tip_dates <- function(tree, df, label_var, date_var, strategy = "middle") {
   tip_dates <- df[[date_var]]
   # Fix dates, if necessary
   if (inherits(tip_dates, "Date")) {
-    tip_dates <- tip_dates
+    # already a Date vector; no conversion needed
   } else if (inherits(tip_dates, c("POSIXct", "POSIXt"))) {
     tip_dates <- as.Date(tip_dates)
   } else if (inherits(tip_dates, "character")) {
@@ -55,8 +55,6 @@ tip_dates <- function(tree, df, label_var, date_var, strategy = "middle") {
       tip_dates <- date_upper(tip_dates)
     } else if (strategy == "random") {
       tip_dates <- date_runif(tip_dates)
-    } else {
-      stop("Unknown strategy: ", strategy)
     }
   } else {
     stop("'date_var' must be of class Date, POSIXct, POSIXt, or character.")

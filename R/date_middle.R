@@ -7,7 +7,7 @@
 #' @param out_format character; output format, either \code{"decimal"} or
 #' \code{"date"}.
 #' @examples
-#' date_middle("2021-18-11")
+#' date_middle("2021-08-11")
 #' date_middle("1988-03")
 #' date_middle("2000")
 #' @export
@@ -21,7 +21,7 @@ date_middle <- function(dates, out_format = "date"){
     if(is.na(x)) return(NA)
     lower <- date_lower(x, out_format = "decimal")
     upper <- date_upper(x, out_format = "decimal")
-    middle <- mean(lower)
+    middle <- mean(c(lower, upper))
     return(middle)
   }
   out <- sapply(dates, foo)

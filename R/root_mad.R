@@ -36,7 +36,7 @@ root_mad <- function(unrooted_newick,
     choices = c("newick", "stats", "full")
   )
   t <- NA
-  if(class(unrooted_newick)=="phylo"){ 
+  if (inherits(unrooted_newick, "phylo")) { 
     t <- unrooted_newick
   }
   else{
@@ -86,7 +86,7 @@ root_mad <- function(unrooted_newick,
   sdis <- dis[1:notu,1:notu] # phenetic distance. otus only
 
   #### Start recursion to collapse identical OTUs, if present.
-  # ii<-which(sdis==0,arr.ind=TRUE)
+  # ii<-which(sís==0,arr.ind=TRUE)
   # k<-which(ii[,1]!=ii[,2])
   # if(length(k)){
   #   r<-ii[k[1],1]
@@ -120,7 +120,7 @@ root_mad <- function(unrooted_newick,
     disbr <- ape::dist.nodes(t2) # split distance. All nodes
     if (cache) {
       if (verbose) message("Saving to cache. ", appendLF = FALSE)
-      saveRDS(dis, "distmat_t2.rds")
+      saveRDS(disbr, "distmat_t2.rds")
     }
   }
   if (verbose) message("Done.")
@@ -205,7 +205,7 @@ root_mad <- function(unrooted_newick,
   }
   if (verbose) message("Done.")
   
-  # Select the branch with the minum ancestor deviation and calculate the root ambiguity index
+  # Select the branch with the minimum ancestor deviation and calculate the root ambiguity index
   jj <- sort(bad,index.return = TRUE)
   tf<-bad==jj$x[1]
   tf[is.na(tf)]<-FALSE

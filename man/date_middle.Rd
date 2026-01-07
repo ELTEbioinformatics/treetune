@@ -18,7 +18,7 @@ format is commonly used in phylogenetic dating. If date is incomplete the
 function returns the middle of the interval.
 }
 \examples{
-date_middle("2021-18-11")
+date_middle("2021-08-11")
 date_middle("1988-03")
 date_middle("2000")
 }
