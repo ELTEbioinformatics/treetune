@@ -1,19 +1,57 @@
 Package: treetune
 Type: Package
-Title: Fine-Tune Phylogenetic Trees with Pruning, Rooting, etc.
-Version: 0.1
+Title: Fine-Tune Phylogenetic Trees with Pruning, Rooting, etc
+Version: 0.2
 Date: 2025-07-03
-Author: c(
-    person("Agoston", "Hunya", role = c("aut", "cre"),
-        email = "<EMAIL HERE>",
-        comment = c(ORCID = "<ORCID HERE>")),
-    person("Tamas", "Stirling", role = "aut",
-        comment = c(ORCID = "0000-0002-8964-6443")),
-    person("Balazs", "Papp", role = "aut",
-        comment = c(ORCID = "0000-0003-3093-8852")),
-    person("Eszter", "Ari", role = "aut",
-        comment = c(ORCID = "0000-0001-7774-1067")))
+Authors@R:
+    c(
+      person(
+        "Agoston", "Hunya",
+        role = c("aut", "cre"),
+        email = "ago.hunya@gmail.com",
+        comment = c(ORCID = "<ORCID HERE>")
+      ),
+      person(
+        "Daniel", "Hegedus",
+        role = "aut",
+        comment = c(ORCID = "<ORCID HERE>")
+      ),
+      person(
+        "Mark Hunor", "Juhasz",
+        role = "aut",
+        comment = c(ORCID = "<ORCID HERE>")
+      ),
+      person(
+        "Tamas", "Stirling",
+        role = "aut",
+        comment = c(ORCID = "0000-0002-8964-6443")
+      ),
+      person(
+        "Balazs", "Papp",
+        role = "aut",
+        comment = c(ORCID = "0000-0003-3093-8852")
+      ),
+      person(
+        "Eszter", "Ari",
+        role = "aut",
+        comment = c(ORCID = "0000-0001-7774-1067")
+      )
+    )
 Description: More about what it does (maybe more than one line).
-License: GPL-2
-RoxygenNote: 7.3.2.9000
+RoxygenNote: 7.3.3
 Encoding: UTF-8
+Imports: 
+    ape,
+    dplyr,
+    ggplot2,
+    graphics,
+    lubridate,
+    phangorn,
+    phytools,
+    stats,
+    stringi,
+    tibble
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+License: GPL-2
