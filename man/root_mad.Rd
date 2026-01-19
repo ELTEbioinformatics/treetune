@@ -50,7 +50,7 @@ object, the index of the root branch, the branch ancestor deviations and a
 rooted tree object.
 }
 \examples{
-\dontrun {
+\dontrun{
 # TODO simulate random tree
 root_mad(unrooted_newick, output_mode)
 }
