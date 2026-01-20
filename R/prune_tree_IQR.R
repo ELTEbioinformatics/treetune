@@ -1,13 +1,13 @@
 #' Prune a Phylogenetic Tree Using the IQR Algorithm
 #' This function implements a two-part tree pruning algorithm based on branch length
 #' and root-to-tip distance outlier detection using the Inter Quartile Range (IQR) method.
-#' @param tree_file character; a phylogentic tree in .nwk, .newick or .tree format.
+#' @param tree_file character; a phylogenetic tree in .nwk, .newick or .tree format.
 #' @param threshold numeric; the minimum percentage of the leaves that the algorithm must keep. Defaults to 90.
 #' @param output character; the desired name of the output file. Defaults to "iqr_tree.nwk".
 #' @return A list with two elements:
 #' \describe{
 #'   \item{tree}{The pruned tree in phylo format.}
-#'   \item{percentage_retained}{A numeric value indicating the percentage of leaves retained after pruning.}
+#'   \item{percent_remaining}{A numeric value indicating the percentage of leaves retained after pruning.}
 #' }
 #' @details
 #' Abbreviations:
@@ -33,13 +33,13 @@
 #'
 #' Repeating the previous three steps until there are no more extreme outlier IQR tip is found.
 #'
-#' Unrooting the pruned tree.#' Python integration is handled via the `reticulate` package.
+#' Unrooting the pruned tree.
 #' @export
 
 
 prune_tree_IQR <- function(tree_file, threshold = 90, output = "iqr_tree.nwk") {
 
-  # Valdiation
+  # Validation
   .check_string(tree_file, "tree_file")
   .check_file_exists(tree_file)
   .check_number(threshold, "threshold", 0, 100)

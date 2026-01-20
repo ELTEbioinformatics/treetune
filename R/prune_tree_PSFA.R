@@ -2,18 +2,17 @@
 #'
 #' This functions Identifies the longest edge and calculates the sizes of the two components resulting from its removal.
 #' If the size of the smaller component is within the tolerance range and the edge was excessively long, removes it.
-#' @param tree_file character; a phylogentic tree in .nwk, .newick or .tree format.
+#' @param tree_file character; a phylogenetic tree in .nwk, .newick or .tree format.
 #' @param threshold numeric; the minimum percentage of the leaves that the algorithm must keep. Defaults to 90.
 #' @param longest_to_average numeric; determines how many times longer should a branch be than the average, to consider it too long. Defaults to 9.
 #' @param output character; the desired name of the output file. Defaults to "psfa_tree.nwk".
 #' @return A list with two elements:
 #' \describe{
 #'   \item{tree}{The pruned tree in phylo format.}
-#'   \item{percentage_retained}{A numeric value indicating the percentage of leaves retained after pruning.}
+#'   \item{percent_remaining}{A numeric value indicating the percentage of leaves retained after pruning.}
 #' }
 #' @details You have to define criteria for considering an edge as "excessively long".
 #' You also have to specify the tolerance range.
-#' Python integration is handled via the `reticulate` package.
 #' @export
 
 

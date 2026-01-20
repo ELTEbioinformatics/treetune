@@ -19,7 +19,7 @@ prune_tree_CPA(
 )
 }
 \arguments{
-\item{tree_file}{character; a phylogentic tree in .nwk, .newick or .tree format.}
+\item{tree_file}{character; a phylogenetic tree in .nwk, .newick or .tree format.}
 
 \item{root_to_node_ratio}{numeric; determines how many nodes does the algorithm try out as "roots".
 By increasing this parameter, the precision and the runtime becomes greater too.
@@ -37,7 +37,7 @@ During the CPA the leaves are being placed in brackets based on their distances 
 The algorithm will delete the leaves in the last couple of brackets if certain conditions are met.
 M_n determines the number of brackets: the total number of brackets will be M_n(num_leaves), where num_leaves is the number of leaves on the tree.
 The default value means that the user did not give any function to the argument. In this case M_n(num_leaves) = num_leaves.
-Assigning anything to M_nother than a function will result in an error message.}
+Assigning anything to M_n other than a function will result in an error message.}
 
 \item{threshold}{numeric; the minimum percentage of the leaves that the algorithm must keep. Defaults to 90.}
 
@@ -65,7 +65,7 @@ This list will be the third return value.}
 A list with the following elements:
 \describe{
   \item{tree}{The pruned tree in phylo format.}
-  \item{percentage_retained}{A numeric value indicating the percentage of leaves retained after pruning.}
+  \item{percent_remaining}{A numeric value indicating the percentage of leaves retained after pruning.}
   \item{pruned_tips}{(Optional) A character vector containing the names of the pruned tips. This is returned only if `show_pruned_tips = TRUE`.}
 }
 }
@@ -76,5 +76,4 @@ It aims to prune the tree to make it roughly circular
 \details{
 You have to define criteria for considering an edge as "excessively long".
 You also have to specify the tolerance range.
-Python integration is handled via the `reticulate` package.
 }

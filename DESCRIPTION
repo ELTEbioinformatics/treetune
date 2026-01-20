@@ -2,7 +2,7 @@ Package: treetune
 Type: Package
 Title: Fine-Tune Phylogenetic Trees with Pruning, Rooting, etc
 Version: 0.2
-Date: 2025-07-03
+Date: 2026-01-20
 Authors@R:
     c(
       person(

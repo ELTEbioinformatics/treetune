@@ -9,7 +9,7 @@ and root-to-tip distance outlier detection using the Inter Quartile Range (IQR) 
 prune_tree_IQR(tree_file, threshold = 90, output = "iqr_tree.nwk")
 }
 \arguments{
-\item{tree_file}{character; a phylogentic tree in .nwk, .newick or .tree format.}
+\item{tree_file}{character; a phylogenetic tree in .nwk, .newick or .tree format.}
 
 \item{threshold}{numeric; the minimum percentage of the leaves that the algorithm must keep. Defaults to 90.}
 
@@ -19,7 +19,7 @@ prune_tree_IQR(tree_file, threshold = 90, output = "iqr_tree.nwk")
 A list with two elements:
 \describe{
   \item{tree}{The pruned tree in phylo format.}
-  \item{percentage_retained}{A numeric value indicating the percentage of leaves retained after pruning.}
+  \item{percent_remaining}{A numeric value indicating the percentage of leaves retained after pruning.}
 }
 }
 \description{
@@ -51,5 +51,5 @@ Excluding the most extreme outlier tip based on the IQR for root-to-tip distance
 
 Repeating the previous three steps until there are no more extreme outlier IQR tip is found.
 
-Unrooting the pruned tree.#' Python integration is handled via the `reticulate` package.
+Unrooting the pruned tree.
 }
