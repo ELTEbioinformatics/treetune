@@ -21,7 +21,7 @@
 #' @source Article: https://doi.org/10.1038/s41559-017-0193
 #' @source Original code: https://www.mikrobio.uni-kiel.de/de/ag-dagan/ressourcen/mad2-2.zip
 #' @examples
-#' \dontrun {
+#' \dontrun{
 #' # TODO simulate random tree
 #' root_mad(unrooted_newick, output_mode)
 #' }
