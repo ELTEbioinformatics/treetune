@@ -37,7 +37,9 @@ Authors@R:
         comment = c(ORCID = "0000-0001-7774-1067")
       )
     )
-Description: More about what it does (maybe more than one line).
+Description: Tools for modifying existing phylogenetic trees, including 
+    pruning tips or branches, selecting biologically meaningful root positions, 
+    and visualizing tree adjustments. The package does not infer trees.
 RoxygenNote: 7.3.3
 Encoding: UTF-8
 Imports: 
