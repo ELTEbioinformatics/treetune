@@ -72,116 +72,225 @@ prune_tree_CPA <- function(
   .check_boolean(show_pruned_tips, "show_pruned_tips")
   .check_string(output, "output")
 
-
-
   tree <- ape::read.tree(tree_file)
   original_num_leaves <- length(tree$tip.label)
+  ntip <- ape::Ntip(tree)
+  root_id <- ntip + 1L
 
   if (is.function(M_n)) {
-    M_n_int <- max(1, floor(M_n(original_num_leaves)))
+    M_n_int <- max(1L, as.integer(floor(M_n(original_num_leaves))))
   } else {
-    M_n_int <- ifelse(M_n == 0, original_num_leaves, max(1, floor(M_n)))
+    M_n_int <- if (identical(M_n, 0)) original_num_leaves else max(1L, as.integer(floor(M_n)))
   }
 
   hang <- function(tree, root_node) {
     dist_nodes <- ape::dist.nodes(tree)
-    tips <- which(tree$edge[, 2] <= length(tree$tip.label))
-    dist_to_root <- dist_nodes[root_node, tips]
-    as.numeric(dist_to_root)
+    as.numeric(dist_nodes[root_node, 1:ape::Ntip(tree)])
   }
 
-  internal_nodes <- unique(tree$edge[, 1])
+  edge_len_between <- function(tree, u, v) {
+    e <- tree$edge
+    el <- tree$edge.length
+    k <- which(e[, 1] == u & e[, 2] == v)
+    if (length(k) == 1) return(el[k])
+    k <- which(e[, 1] == v & e[, 2] == u)
+    if (length(k) == 1) return(el[k])
+    stop("Could not find edge between nodes on path (unexpected).")
+  }
+
+  midpoint_internal_node <- function(tree) {
+    ntip <- ape::Ntip(tree)
+    if (ntip < 2) return(NA_integer_)
+
+    d <- ape::cophenetic.phylo(tree)
+    d[lower.tri(d, diag = TRUE)] <- -Inf
+    ij <- which(d == max(d, na.rm = TRUE), arr.ind = TRUE)[1, ]
+    tip_i <- ij[1]; tip_j <- ij[2]
+    diam <- d[tip_i, tip_j]
+    half <- diam / 2
+
+    path_nodes <- ape::nodepath(tree, from = tip_i, to = tip_j)[[1]]
+    if (length(path_nodes) < 2) return(NA_integer_)
+
+    cum <- 0
+    for (k in seq_len(length(path_nodes) - 1)) {
+      u <- path_nodes[k]
+      v <- path_nodes[k + 1]
+      seg <- edge_len_between(tree, u, v)
+
+      if (cum + seg >= half) {
+        t_from_u <- half - cum
+        t_from_v <- seg - t_from_u
+
+        cand <- c(u, v)
+        dist_to_mid <- c(t_from_u, t_from_v)
+
+        is_internal <- cand > ntip
+        if (!any(is_internal)) return(NA_integer_)
+
+
+        internal_idx <- which(is_internal)
+        best <- internal_idx[which.min(dist_to_mid[internal_idx])]
+        chosen <- cand[best]
+
+        if (chosen <= ntip) return(NA_integer_)
+        return(as.integer(chosen))
+      }
+
+      cum <- cum + seg
+    }
+
+    chosen <- path_nodes[length(path_nodes)]
+    if (chosen <= ntip) return(NA_integer_)
+    as.integer(chosen)
+  }
+
+  children <- split(tree$edge[, 2], tree$edge[, 1])
+
+  bfs_nodes <- function(start) {
+    q <- start
+    out <- integer(0)
+    while (length(q) > 0) {
+      v <- q[1]
+      q <- q[-1]
+      out <- c(out, v)
+      ch <- children[[as.character(v)]]
+      if (!is.null(ch)) q <- c(q, ch)
+    }
+    out
+  }
+
+  order_all <- bfs_nodes(root_id)
+  internal_nodes <- order_all[order_all > ntip]
   num_non_leaf_nodes <- length(internal_nodes)
-  num_roots <- min(max(floor(root_to_node_ratio * num_non_leaf_nodes), min_num_of_roots), num_non_leaf_nodes)
+
+  num_roots <- min(
+    max(floor(root_to_node_ratio * num_non_leaf_nodes), min_num_of_roots),
+    num_non_leaf_nodes
+  )
+
   set.seed(123)
   roots <- sample(internal_nodes, num_roots)
-  roots <- unique(c(roots, ape::Nnode(tree) + 1))
+
+  mid_root <- midpoint_internal_node(tree)
+  if (!is.na(mid_root)) roots <- unique(c(roots, mid_root))
 
   best_p_v <- Inf
-  best_data <- NULL
   best_root <- NULL
-  best_stop <- NULL
+  best_stop0 <- NULL
   best_original_radius <- NULL
 
   for (root in roots) {
     data <- hang(tree, root)
     original_radius <- max(data)
-    bin_edges <- seq(min(data), original_radius, length.out = M_n_int + 1)
-    hist_counts <- graphics::hist(data, breaks = bin_edges, plot = FALSE)$counts
+
+    a <- min(data)
+    b <- original_radius
+    n <- M_n_int
+
+
+    bin_edges <- a + (0:n) * (b - a) / n
+
+
+    idx <- findInterval(data, bin_edges, rightmost.closed = TRUE)
+    idx <- idx[idx >= 1 & idx <= n]
+    hist_counts <- tabulate(idx, nbins = n)
 
     cum_freq <- cumsum(hist_counts)
-    total_freq <- sum(hist_counts)
-    threshold_index <- which(cum_freq >= (threshold / 100) * total_freq)[1]
-    stop <- M_n_int - 1
+    total_freq <- cum_freq[length(cum_freq)]
 
-    if (threshold_index == M_n_int - 1) {
-      stop <- threshold_index
-    } else if (threshold_index == M_n_int - 2) {
-      if (hist_counts[threshold_index + 1] < (beta / 100) * hist_counts[threshold_index]) {
-        stop <- threshold_index
+
+    threshold_index0 <- which(cum_freq >= (threshold / 100) * total_freq)[1] - 1L
+
+
+    stop0 <- n - 1L
+
+    if (threshold_index0 == n - 1L) {
+      stop0 <- threshold_index0
+    } else if (threshold_index0 == n - 2L) {
+      if (hist_counts[threshold_index0 + 2L] < (beta / 100) * hist_counts[threshold_index0 + 1L]) {
+        stop0 <- threshold_index0
       }
     } else {
-      for (i in threshold_index:(M_n_int - 2)) {
-        if (hist_counts[i + 1] < (beta / 100) * hist_counts[i]) {
-          stop <- i
+      for (i0 in threshold_index0:(n - 2L)) {
+        if (hist_counts[i0 + 2L] < (beta / 100) * hist_counts[i0 + 1L]) {
+          stop0 <- i0
           break
         }
       }
     }
 
-    p_v <- bin_edges[stop + 2]
+
+    p_v <- bin_edges[stop0 + 2L]
+
+
     if (p_v < best_p_v) {
       best_p_v <- p_v
       best_root <- root
-      best_stop <- stop
+      best_stop0 <- stop0
       best_original_radius <- original_radius
     }
   }
 
   if (show_plot && !is.null(best_root)) {
     data <- hang(tree, best_root)
-    bin_edges <- seq(min(data), max(data), length.out = M_n_int + 1)
-    hist_obj <- graphics::hist(data, breaks = bin_edges, plot = FALSE)
+    a <- min(data)
+    b <- max(data)
+    n <- M_n_int
+    bin_edges <- a + (0:n) * (b - a) / n
+
+    idx <- findInterval(data, bin_edges, rightmost.closed = TRUE)
+    idx <- idx[idx >= 1 & idx <= n]
+    counts <- tabulate(idx, nbins = n)
+
+    mids <- (bin_edges[-1] + bin_edges[-(n + 1L)]) / 2
     df <- data.frame(
-      mids = hist_obj$mids,
-      counts = hist_obj$counts,
-      color = ifelse(seq_along(hist_obj$counts) > best_stop, "red", "gray")
+      mids = mids,
+      counts = counts,
+      color = ifelse(seq_len(n) > (best_stop0 + 1L), "red", "gray")
     )
-    plot(ggplot2::ggplot(df, ggplot2::aes(x = mids, y = counts, fill = color)) +
-           ggplot2::geom_bar(stat = "identity", color = "black") +
-           ggplot2::scale_fill_identity() +
-           ggplot2::labs(title = "CPA", x = "Distance from root", y = "Frequency"))
+
+    plot(
+      ggplot2::ggplot(df, ggplot2::aes(x = mids, y = counts, fill = color)) +
+        ggplot2::geom_bar(stat = "identity", color = "black") +
+        ggplot2::scale_fill_identity() +
+        ggplot2::labs(title = "CPA", x = "Distance from root", y = "Frequency")
+    )
   }
 
   if ((100 - 100 * best_p_v / best_original_radius) >= radius_ratio) {
-    pruned <- c()
-    retained <- c()
-    tip_ids <- 1:ape::Ntip(tree)
+    pruned <- character(0)
+    retained <- character(0)
+
     tip_distances <- hang(tree, best_root)
-    for (i in seq_along(tip_ids)) {
-      name <- tree$tip.label[i]
+    for (i in seq_len(ntip)) {
+      nm <- tree$tip.label[i]
       dist <- tip_distances[i]
-      if (dist <= best_p_v || name %in% safe_tips) {
-        retained <- c(retained, name)
+      if (dist <= best_p_v || nm %in% safe_tips) {
+        retained <- c(retained, nm)
       } else {
-        pruned <- c(pruned, name)
+        pruned <- c(pruned, nm)
       }
     }
+
     tree <- ape::keep.tip(tree, retained)
     ape::write.tree(tree, file = output)
 
+    percent_remaining <- 100 * length(tree$tip.label) / original_num_leaves
     if (show_pruned_tips) {
-      return(list(tree = tree, percent_remaining = 100 * length(tree$tip.label) / original_num_leaves, pruned_tips = pruned))
-    } else {
-      return(list(tree = tree, percent_remaining = 100 * length(tree$tip.label) / original_num_leaves))
+      return(list(tree = tree, percent_remaining = percent_remaining, pruned_tips = pruned))
     }
+    return(list(tree = tree, percent_remaining = percent_remaining))
   }
 
   if (show_pruned_tips) {
-    return(list(tree = tree, percent_remaining = 100, pruned_tips = c()))
+    return(list(tree = tree, percent_remaining = 100, pruned_tips = character(0)))
   }
   list(tree = tree, percent_remaining = 100)
 }
+
+
+
 
 
 
