@@ -21,12 +21,12 @@
 #' @param threshold numeric; the minimum percentage of the leaves that the algorithm must keep. Defaults to 90.
 #' @param beta numeric; determines where to prune the tree. After placing the leaves in the brackets, the first couple of brackets will be safe, until the total number of leaves in them reaches alpha*num_leaves.
 #' When the CPA finds this threshold, it is ready for pruning. The algorithm will start the pruning if a bracket contains beta percent less leaves than the previous one.
-#' After this point the CPA will delete every leaf. Defaults to 25.
+#' After this point the CPA will delete every leaf. Defaults to 20.
 #' @param radius_ratio numeric;  controls whether pruning occurs based on the tree's radius. If the longest root-to-tip distance in the pruned tree is not at least radius_ratio percent smaller than in the original tree (measured from the same root), no pruning is performed.
 #' Defaults to 0.
-#' @param safe_tips list; a list where you can input the names of the tips that you do not want to be cut off.
-#' After the algorithm chose the best root and started the pruning, it checks which leaves are in the list and leaves them on the tree.
-#' The default value means that there are no safe leaves. It is important that the names in the list must be characters.
+#' @param safe_tips character vector; a character vector where you can input the names of the tips that you do not want to be cut off.
+#' After the algorithm chose the best root and started the pruning, it checks which leaves are in the vector and leaves them on the tree.
+#' The default value means that there are no safe leaves.
 #' @param show_plot bool; the default value means that after running the code it will not show any plot. By setting this value to TRUE, the brackets will be shown to the user.
 #' These brackets correspond to the "best root" (the center of the outscribed circle of the tree). On the x axis you can see the distances from the root, while on the y axis you can see how many leaves were placed in each bracket.
 #' Blue indicates the preserved brackets, while red indicates the ones which have been deleted.
