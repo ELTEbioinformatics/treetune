@@ -106,7 +106,7 @@ calculate_iqr_threshold <- function(values) {
 root_like_ete <- function(tr) {
   if (ape::is.rooted(tr)) return(tr)
   root_node <- ape::Ntip(tr) + 1L
-  ape::root(tr, node = root_node, resolve.root = T)
+  ape::root(tr, node = root_node, resolve.root = TRUE)
 }
 
 #' @keywords internal
