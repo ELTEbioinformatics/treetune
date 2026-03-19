@@ -139,71 +139,96 @@ children_labels <- function(tr, parent_label) {
 # ---- the dynamic-preorder branch-length IQR pruner ----
 #' @keywords internal
 prune_by_branch_length <- function(tree, threshold) {
-  # 0) set up original reference & fence
-  tree0 <- ensure_node_labels(root_like_ete(tree))
-  upper_fence0 <- calculate_iqr_threshold(tree0$edge.length)
-  total_tips0  <- ape::Ntip(tree0)
+  stopifnot(inherits(tree, "phylo"))
+  if (is.null(tree$edge.length)) stop("phylo has no edge.length; cannot use branch-length thresholding.")
+
+  get_desc_tip_labels <- function(tr, node_id) {
+    ntip <- ape::Ntip(tr)
+    children_map <- split(tr$edge[, 2], tr$edge[, 1])
+
+    out <- character(0)
+    stack <- node_id
+    while (length(stack) > 0) {
+      x <- stack[[1]]
+      stack <- stack[-1]
+      if (x <= ntip) {
+        out <- c(out, tr$tip.label[x])
+      } else {
+        kids <- children_map[[as.character(x)]]
+        if (!is.null(kids) && length(kids) > 0) stack <- c(kids, stack)
+      }
+    }
+    unique(out)
+  }
+
+
+  levelorder_node_ids <- function(tr) {
+    tr <- ape::reorder.phylo(tr, order = "cladewise")
+    d <- ape::node.depth(tr)
+    parent_depth <- d[tr$edge[, 1]]
+    child_depth  <- d[tr$edge[, 2]]
+    tr$edge[order(parent_depth, child_depth, seq_len(nrow(tr$edge))), 2]
+  }
+
+
+  upper_fence <- calculate_iqr_threshold(tree$edge.length)
+  total_tips  <- ape::Ntip(tree)
   percent_left <- 100 - threshold
 
-  # 1) work on a live copy (keep node labels so we can refind nodes)
-  tr <- tree0
-  tr <- ensure_node_labels(tr)
 
-  # define root label once, based on current tr
-  root_label <- c(tr$tip.label, tr$node.label)[ape::Ntip(tr) + 1L]
+  tree <- ape::reorder.phylo(tree, order = "cladewise")
 
-  # Queue for levelorder (breadth-first)
-  queue <- list(root_label)
+  repeat {
+    pruned_this_pass <- FALSE
 
-  dequeue <- function() {
-    x <- queue[[1]]
-    queue <<- queue[-1]
-    x
-  }
 
-  enqueue <- function(labels) {
-    if (length(labels)) queue <<- c(queue, as.list(labels))
-  }
+    node_order <- levelorder_node_ids(tree)
 
-  while (length(queue)) {
-    node_lbl <- dequeue()
-    lab2num <- label_to_node_number(tr)
-    node_num <- unname(lab2num[node_lbl])
-    if (is.na(node_num)) next  # may have been pruned
+    for (node_id in node_order) {
+      ntip <- ape::Ntip(tree)
+      max_node_id <- ntip + tree$Nnode
+      if (node_id < 1 || node_id > max_node_id) next
 
-    # skip root
-    if (node_num != (ape::Ntip(tr) + 1L)) {
-      hit <- which(tr$edge[,2] == node_num)
-      if (length(hit)) {
-        node_dist <- tr$edge.length[hit[1L]]
-        if (!is.na(node_dist) && node_dist > upper_fence0) {
-          tip_ids <- 1:ape::Ntip(tr)
-          leaves_on_one_side <- phangorn::Descendants(tr, node_num, "tips")[[1]]
-          leaves_on_other_side <- setdiff(tip_ids, leaves_on_one_side)
-          one_side <- length(leaves_on_one_side)
-          other_side <- length(leaves_on_other_side)
-          min_tips <- min(one_side, other_side)
+      all_leaves <- tree$tip.label
+      num_leaves <- length(all_leaves)
 
-          if (min_tips < (percent_left * total_tips0) / 100) {
-            to_remove <- if (one_side <= other_side) leaves_on_one_side else leaves_on_other_side
-            if (length(to_remove) > 0) {
-              tr <- ape::drop.tip(tr, to_remove, collapse.singles = TRUE)
-              removed <- length(to_remove)
-              percent_left <- percent_left - 100 * removed / total_tips0
-              tr <- ensure_node_labels(tr)
-            }
-          }
+      leaves_on_one_side <- get_desc_tip_labels(tree, node_id)
+      one_side <- length(leaves_on_one_side)
+      other_side <- num_leaves - one_side
+      min_tips <- min(one_side, other_side)
+
+      edge_idx <- which(tree$edge[, 2] == node_id)
+      if (length(edge_idx) == 0) next
+      node_dist <- tree$edge.length[edge_idx[1]]
+
+      if (node_dist > upper_fence && min_tips < (percent_left * total_tips) / 100) {
+
+
+        if (one_side > other_side) {
+          tips_to_remove <- setdiff(all_leaves, leaves_on_one_side)
+          tree <- ape::drop.tip(tree, tips_to_remove)
+          percent_left <- percent_left - 100 * other_side / total_tips
+        } else {
+          tips_to_remove <- leaves_on_one_side
+          tree <- ape::drop.tip(tree, tips_to_remove)
+          percent_left <- percent_left - 100 * one_side / total_tips
         }
+
+        tree <- ape::reorder.phylo(tree, order = "cladewise")
+        pruned_this_pass <- TRUE
+        break
       }
     }
 
-    # enqueue children after processing current node
-    ch_labs <- children_labels(tr, node_lbl)
-    enqueue(ch_labs)
+    if (!pruned_this_pass) break
   }
 
-  list(tree = tr, percent_left_budget = percent_left)
+  list(tree = tree, percent_left_budget = percent_left)
 }
+
+
+
+
 
 # ---------- Root-to-tip phase (unchanged; ape-only) ----------
 #' @keywords internal
@@ -212,43 +237,48 @@ root_to_tip_ape <- function(tr) ape::node.depth.edgelength(tr)[1:ape::Ntip(tr)]
 
 #' @keywords internal
 midpoint_root <- function(tr) {
-  return(phytools::midpoint.root(tr))
+  return(phangorn::midpoint(tr))
 }
+
 
 #' @keywords internal
 prune_by_root_to_tip <- function(tree, percent_left, original_num_leaves) {
+  stopifnot(inherits(tree, "phylo"))
+
+  cutoff <- (percent_left * original_num_leaves) / 100
+
   tr0 <- midpoint_root(tree)
-  # Identify the two child edges of the new root
-  root_edges <- which(tr0$edge[,1] == ape::Ntip(tr0) + 1L)
-  root_mean <- mean(tr0$edge.length[root_edges])
-
-  tr0$edge.length[root_edges] <- rep(root_mean[1], length(root_edges))
-
-
   dist0 <- root_to_tip_ape(tr0)
-  names(dist0) <- tree$tip.label
-  out0 <- if (length(dist0) >= 4L) which(dist0 > calculate_iqr_threshold(dist0)) else integer(0)
-  #out0 <- names(dist0)[dist0 > calculate_iqr_threshold(dist0)]
-  if (length(out0) > (percent_left * original_num_leaves) / 100) {
-    return(tree)  # early exit, like Python
+  names(dist0) <- tr0$tip.label
+
+  if (length(dist0) >= 4L) {
+    fence0 <- calculate_iqr_threshold(unname(dist0))
+    outliers0 <- which(dist0 > fence0)
+    if (length(outliers0) > cutoff) return(tree)
+  } else {
+    return(tree)
   }
 
   removed_counter <- 0L
-  while (removed_counter < (percent_left * original_num_leaves) / 100) {
+  while (removed_counter < cutoff) {
     tr0 <- midpoint_root(tree)
-    root_edges <- which(tr0$edge[,1] == ape::Ntip(tr0) + 1L)
-    root_mean <- mean(tr0$edge.length[root_edges])
-
-    tr0$edge.length[root_edges] <- rep(root_mean[1], length(root_edges))
     dist_rt <- root_to_tip_ape(tr0)
     if (length(dist_rt) < 4L) break
-    fence <- calculate_iqr_threshold(dist_rt)
-    out <- which(dist_rt > fence)
-    if (length(out) == 0) break
-    extreme <- out[ which.max(dist_rt[out]) ]
-    tree <- ape::drop.tip(tree, tree$tip.label[extreme])
-    removed_counter <- removed_counter + 1L
-    percent_left <- percent_left - 100 / original_num_leaves
+    names(dist_rt) <- tr0$tip.label
+
+    fence <- calculate_iqr_threshold(unname(dist_rt))
+
+
+    extreme_name <- names(dist_rt)[which.max(dist_rt)]
+    if (dist_rt[extreme_name] > fence) {
+      tree <- ape::drop.tip(tree, extreme_name)
+      removed_counter <- removed_counter + 1L
+      percent_left <- percent_left - 100 / original_num_leaves
+      cutoff <- (percent_left * original_num_leaves) / 100
+    } else {
+      break
+    }
   }
+
   ape::unroot(tree)
 }
