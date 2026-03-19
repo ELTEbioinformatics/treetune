@@ -10,7 +10,7 @@ prune_tree_CPA(
   min_num_of_roots = 15,
   M_n = 0,
   threshold = 90,
-  beta = 20,
+  beta = 25,
   radius_ratio = 0,
   safe_tips = character(0),
   show_plot = FALSE,
@@ -48,9 +48,9 @@ After this point the CPA will delete every leaf. Defaults to 25.}
 \item{radius_ratio}{numeric;  controls whether pruning occurs based on the tree's radius. If the longest root-to-tip distance in the pruned tree is not at least radius_ratio percent smaller than in the original tree (measured from the same root), no pruning is performed.
 Defaults to 0.}
 
-\item{safe_tips}{list; a list where you can input the names of the tips that you do not want to be cut off.
-After the algorithm chose the best root and started the pruning, it checks which leaves are in the list and leaves them on the tree.
-The default value means that there are no safe leaves. It is important that the names in the list must be characters.}
+\item{safe_tips}{character vector; a character vector where you can input the names of the tips that you do not want to be cut off.
+After the algorithm chose the best root and started the pruning, it checks which leaves are in the vector and leaves them on the tree.
+The default value means that there are no safe leaves.}
 
 \item{show_plot}{bool; the default value means that after running the code it will not show any plot. By setting this value to TRUE, the brackets will be shown to the user.
 These brackets correspond to the "best root" (the center of the outscribed circle of the tree). On the x axis you can see the distances from the root, while on the y axis you can see how many leaves were placed in each bracket.
