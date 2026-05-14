@@ -7,6 +7,6 @@ based on [https://pypi.org/project/treepruner/](https://pypi.org/project/treepru
 
 You can install this package from GitHub:
 
-```
+```r
 remotes::install_github("ELTEbioinformatics/treetune")
 ```
