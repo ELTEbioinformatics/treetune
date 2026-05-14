@@ -282,3 +282,35 @@ prune_by_root_to_tip <- function(tree, percent_left, original_num_leaves) {
 
   ape::unroot(tree)
 }
+
+
+
+validate_algorithm_args <- function(algorithm, args) {
+  allowed_args <- list(
+    CPA = c(
+      "root_to_node_ratio",
+      "min_num_of_roots",
+      "M_n",
+      "beta",
+      "radius_ratio",
+      "safe_tips",
+      "show_plot",
+      "show_pruned_tips"
+    ),
+    PSFA = c(
+      "longest_to_average"
+    ),
+    IQR = character(0)
+  )
+
+  unknown_args <- setdiff(names(args), allowed_args[[algorithm]])
+
+  if (length(unknown_args) > 0) {
+    stop(
+      "Unknown argument(s) for ", algorithm, ": ",
+      paste(unknown_args, collapse = ", ")
+    )
+  }
+
+  args
+}

@@ -1,8 +1,8 @@
 Package: treetune
 Type: Package
 Title: Fine-Tune Phylogenetic Trees with Pruning, Rooting, etc
-Version: 0.3
-Date: 2026-01-20
+Version: 0.4
+Date: 2026-05-14
 Authors@R:
     c(
       person(
@@ -46,7 +46,6 @@ Imports:
     ape,
     dplyr,
     ggplot2,
-    graphics,
     lubridate,
     phangorn,
     phytools,
